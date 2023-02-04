@@ -1,0 +1,5 @@
+#pragma once
+
+#include "core/precompiled.hpp"
+#include "core/aliases.hpp"
+#include "core/constants.hpp"

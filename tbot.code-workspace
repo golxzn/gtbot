@@ -1,0 +1,35 @@
+{
+	"folders": [
+		{ "path": "." }
+	],
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "(Windows) Launch",
+				"type": "node",
+				"request": "launch",
+				"program": "${command:cmake.launchTargetPath}",
+				"args": [],
+				"cwd": "${workspaceFolder}/bin",
+			}
+		],
+		"compounds": []
+	},
+	"settings": {
+		"files.eol": "\n",
+		"editor.formatOnSave": true,
+		"editor.formatOnSaveMode": "modifications",
+		"files.insertFinalNewline": true,
+		// "cmake.generator": "Ninja",
+		"cmake.generator": "Visual Studio 17 2022",
+		"cmake.exportCompileCommandsFile": true,
+		"cmake.parallelJobs": 16,
+		"cmake.buildDirectory": "${workspaceFolder}/build",
+		"cmake.useCMakePresets": "auto",
+		"cmake.environment": {
+			"CXX_FLAGS": "-Xlinker /libpath:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.22621.0\\um\\x64"
+		},
+		"todo-tree.tree.scanMode": "workspace only"
+	}
+}

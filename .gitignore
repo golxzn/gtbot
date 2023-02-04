@@ -1,0 +1,7 @@
+
+build/
+bin/Debug
+bin/Release
+bin/DebWithRelInfo
+bin/*.exe
+bin/*.pdb
