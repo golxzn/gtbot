@@ -27,9 +27,6 @@
 		"cmake.parallelJobs": 16,
 		"cmake.buildDirectory": "${workspaceFolder}/build",
 		"cmake.useCMakePresets": "auto",
-		"cmake.environment": {
-			"CXX_FLAGS": "-Xlinker /libpath:C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.22621.0\\um\\x64"
-		},
 		"todo-tree.tree.scanMode": "workspace only"
 	}
 }
