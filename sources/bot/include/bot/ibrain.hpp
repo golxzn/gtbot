@@ -11,7 +11,7 @@ public:
 
 	virtual ~IBrain() = default;
 
-	virtual bool memorize() = 0;
+	virtual bool memoize() = 0;
 	virtual std::optional<ThinkResult> think() = 0;
 };
 
