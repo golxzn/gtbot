@@ -121,7 +121,7 @@ void Neuron::shift_back_weights(const std::vector<core::f32> &range) {
 }
 
 std::vector<core::f32> Neuron::get_back_propagation_shifts(
-	[[maybe_unuse]] const std::vector<core::f32> &target_values) {
+	[[maybe_unused]] const std::vector<core::f32> &target_values) {
 
 	using namespace core::types_literals;
 
@@ -135,18 +135,19 @@ std::vector<core::f32> Neuron::get_back_propagation_shifts(
 			edge->set_back_propagated(prop_value);
 			return -prop_value * previous->out();
 		}
-		plog::warn("Neuron::get_back_propagation_shifts - Previous neuron is nullptr");
+		// plog::warn("Neuron::get_back_propagation_shifts - Previous neuron is nullptr");
 		return 0.0_f32;
-	}
+	});
 
 	return shifts;
 }
 
-core::f32 Neuron::make_back_propagated(const std::vector<core::f32> &target_values) {
+core::f32 Neuron::make_back_propagated(const std::vector<core::f32> &target_values) const {
 	if (mLayer->is(Layer::Type::Output)) {
 		return (out() - target_values.at(id())) * out_derivative() ;
 	}
 
+	using namespace core::types_literals;
 	return std::accumulate(std::begin(mNextEdges), std::end(mNextEdges), 0.0_f32,
 		[](auto acc, auto &edge) {
 			if (edge == nullptr) [[unlikely]] return acc;
