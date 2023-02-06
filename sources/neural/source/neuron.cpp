@@ -14,6 +14,10 @@
 
 namespace golxzn::neural {
 
+Neuron::Neuron(core::id::type id, core::sptr<Layer> layer, core::sptr<activation::IFunction> function,
+	const bool bias) noexcept
+	: mID{ id }, mLayer{ layer }, mBias{ bias }, mActivationFunction{ function } { }
+
 bool Neuron::valid() const noexcept { return mLayer != nullptr; }
 bool Neuron::is_bias() const noexcept { return mBias; }
 
@@ -93,6 +97,18 @@ void Neuron::randomize(const core::f32 value) {
 	randomize(-abs_value, abs_value);
 }
 
+void Neuron::trigger() {
+	if (mLayer == nullptr) [[unlikely]] return;
+
+	const auto output{ out() };
+	std::for_each(std::execution::par, std::begin(mNextEdges), std::end(mNextEdges),
+		[output](auto &edge) {
+			if (edge == nullptr) [[unlikely]] return;
+			edge->propagate(output);
+		}
+	);
+}
+
 void Neuron::shift_weights(const core::f32 min, const core::f32 max) {
 	using namespace core::utils;
 
@@ -106,6 +122,18 @@ void Neuron::shift_weights(const core::f32 min, const core::f32 max) {
 void Neuron::shift_weights(const core::f32 value) {
 	const auto abs_value{ std::abs(value) };
 	shift_weights(-abs_value, abs_value);
+}
+
+void Neuron::alter_weights(const std::vector<core::f32> &weights) {
+	if (weights.size() != mNextEdges.size()) [[unlikely]] {
+		throw std::invalid_argument{ "Neuron::alter_weights - Invalid weights size" };
+	}
+
+	size_t index{};
+	std::ranges::for_each(mNextEdges, [&weights, &index](auto &edge) {
+		if (edge == nullptr) [[unlikely]] return;
+		edge->alter_weight(weights.at(index++));
+	});
 }
 
 void Neuron::shift_back_weights(const std::vector<core::f32> &range) {

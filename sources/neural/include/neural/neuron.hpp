@@ -10,12 +10,13 @@ class Edge;
 
 class Neuron final : public std::enable_shared_from_this<Neuron> {
 public:
+
+	Neuron(core::id::type id, core::sptr<Layer> layer, core::sptr<activation::IFunction> function,
+		bool is_bias = false) noexcept;
+
 	template<class Function, std::enable_if_t<std::is_base_of_v<activation::IFunction, Function>, bool> = false>
 	Neuron(core::id::type id, core::sptr<Layer> layer, bool is_bias = false) noexcept
-		: mID{ id }
-		, mLayer{ layer }
-		, mActivationFunction{ std::make_unique<Function>() }
-		, mBias{ is_bias } { }
+		: Neuron{ id, layer, std::make_shared<Function>(), is_bias } {}
 
 	nodis bool valid() const noexcept;
 	nodis bool is_bias() const noexcept;
@@ -40,9 +41,12 @@ public:
 	void randomize(const core::f32 min, const core::f32 max);
 	void randomize(const core::f32 range);
 
+	void trigger();
+
 	void shift_weights(const core::f32 min, const core::f32 max);
 	void shift_weights(const core::f32 range);
 
+	void alter_weights(const std::vector<core::f32> &values);
 	void shift_back_weights(const std::vector<core::f32> &values);
 
 	nodis std::vector<core::f32> get_back_propagation_shifts(const std::vector<core::f32> &target_values);
@@ -54,7 +58,7 @@ private:
 	bool mBias{ false };
 
 	core::sptr<Layer> mLayer;
-	core::uptr<activation::IFunction> mActivationFunction;
+	core::sptr<activation::IFunction> mActivationFunction;
 	std::vector<core::sptr<Edge>> mNextEdges;
 	std::vector<core::sptr<Edge>> mPreviousEdges;
 
