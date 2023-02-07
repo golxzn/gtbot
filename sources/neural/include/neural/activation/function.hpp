@@ -2,6 +2,7 @@
 
 #include <core/aliases.hpp>
 #include <string>
+#include <string_view>
 
 namespace golxzn::neural::activation {
 
@@ -15,7 +16,8 @@ public:
 	nodis virtual core::f32 execute(core::f32 x) const noexcept = 0;
 	nodis virtual core::f32 derivative(core::f32 x) const noexcept = 0;
 
-	nodis bool operator==(const std::string &type) const noexcept;
+	nodis bool is(const std::string_view type) const noexcept;
+	nodis bool operator==(const std::string_view type) const noexcept;
 
 	/** @brief Normal call of the function */
 	nodis core::f32 operator()(core::f32 x) const noexcept;

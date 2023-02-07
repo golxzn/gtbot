@@ -13,9 +13,8 @@ class Neuron;
 class Network;
 
 class Layer : std::enable_shared_from_this<Layer> {
-public:
 	template<class T> using dvec_t = std::vector<std::vector<T>>;
-
+public:
 	enum class Type : core::u8 {
 		Input,
 		Hidden,
@@ -27,7 +26,8 @@ public:
 		core::sptr<activation::IFunction> activation{};
 	};
 
-	Layer(const core::id::type id, core::sptr<Network> &network, const Settings &settings) noexcept;
+	Layer(const core::id::type id, core::sptr<Network> network, const Settings &settings) noexcept;
+	Layer(const core::id::type id, core::sptr<Network> network, Settings &&settings) noexcept;
 
 	bool initialize();
 	void clean();
@@ -51,12 +51,17 @@ public:
 
 	void trigger();
 
+	void set_accumulate(const std::vector<core::f32> &value) noexcept;
+
 	void connect_completely(const core::sptr<Layer> &layer);
 
 	void alter_weights(const dvec_t<core::f32> &weights);
 	void shift_back_weights(const dvec_t<core::f32> &weights);
 
 	void shift_weights(const core::f32 factor);
+
+	void randomize(const core::f32 min, const core::f32 max);
+	void randomize(const core::f32 range);
 
 private:
 	core::id::type mID{};

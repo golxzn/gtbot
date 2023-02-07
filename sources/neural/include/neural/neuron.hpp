@@ -34,6 +34,7 @@ public:
 
 	void clean() noexcept;
 
+	void set_accumulate(const core::f32 value) noexcept;
 	void accumulate(const core::f32 value) noexcept;
 	void connect(core::sptr<Neuron> next) noexcept;
 	void add_previous_edge(core::sptr<Edge> edge) noexcept;

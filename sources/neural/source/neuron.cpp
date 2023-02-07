@@ -31,7 +31,7 @@ core::f32 Neuron::out() const noexcept {
 	else if (mActivationFunction == nullptr) [[unlikely]] return out_raw();
 
 	auto &function{ *mActivationFunction };
-	return function(mAccumulated);
+	return function(out_raw());
 }
 
 core::f32 Neuron::out_raw() const noexcept { return mAccumulated; }
@@ -41,7 +41,7 @@ core::f32 Neuron::out_derivative() const noexcept {
 	if (mActivationFunction == nullptr) [[unlikely]] return out_raw();
 
 	auto &function{ *mActivationFunction };
-	return function[mAccumulated];
+	return function[out_raw()];
 }
 
 core::f32 Neuron::threshold() const noexcept { return mThreshold; }
@@ -62,9 +62,11 @@ const std::vector<core::sptr<Edge>> &Neuron::edges() const noexcept {
 
 void Neuron::clean() noexcept {
 	using namespace core::types_literals;
-	mAccumulated = 0.0_f32;
+	set_accumulate(0.0_f32);
 }
 
+
+void Neuron::set_accumulate(const core::f32 value) noexcept { mAccumulated = value; }
 void Neuron::accumulate(const core::f32 value) noexcept { mAccumulated += value; }
 
 void Neuron::connect(core::sptr<Neuron> next) noexcept {

@@ -8,8 +8,13 @@
 
 namespace golxzn::neural {
 
-Layer::Layer(core::id::type id, core::sptr<Network> &network, const Settings &settings) noexcept
+Layer::Layer(core::id::type id, core::sptr<Network> network, const Settings &settings) noexcept
 	: mID{ id }, mSettings{ settings }, mNetwork{ network } {
+	initialize();
+}
+
+Layer::Layer(core::id::type id, core::sptr<Network> network, Settings &&settings) noexcept
+	: mID{ id }, mSettings{ std::move(settings) }, mNetwork{ network } {
 	initialize();
 }
 
@@ -113,6 +118,19 @@ void Layer::trigger() {
 	);
 }
 
+void Layer::set_accumulate(const std::vector<core::f32> &value) noexcept {
+	if (mNeurons.size() != value.size()) [[unlikely]] return;
+
+	std::for_each(std::execution::par_unseq, std::begin(mNeurons), std::end(mNeurons),
+		[&value](auto &neuron) {
+			if (neuron == nullptr) [[unlikely]] return;
+			const auto id{ neuron->id() };
+			if (id == core::invalid_id<core::u32>()) [[unlikely]] return;
+			neuron->set_accumulate(value.at(id));
+		}
+	);
+}
+
 void Layer::connect_completely(const core::sptr<Layer> &layer) {
 	if (mNeurons.empty() || layer == nullptr) [[unlikely]] return;
 
@@ -160,6 +178,22 @@ void Layer::shift_weights(const core::f32 factor) {
 			neuron->shift_weights(factor);
 		}
 	);
+}
+
+void Layer::randomize(const core::f32 min, const core::f32 max) {
+	if (mNeurons.empty()) [[unlikely]] return;
+
+	std::for_each(std::execution::par_unseq, std::begin(mNeurons), std::end(mNeurons),
+		[min, max](auto &neuron) {
+			if (neuron == nullptr) [[unlikely]] return;
+			neuron->randomize(min, max);
+		}
+	);
+}
+
+void Layer::randomize(const core::f32 range) {
+	const auto abs_range{ std::abs(range) };
+	randomize(-abs_range, abs_range);
 }
 
 } // namespace golxzn::neural
