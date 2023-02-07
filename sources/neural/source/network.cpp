@@ -135,20 +135,6 @@ void Network::randomize(const core::f32 range) noexcept {
 	randomize(-abs_range, abs_range);
 }
 
-/*
-T inner_product(InputIt1 first1, InputIt1 last1,
-                InputIt2 first2, T init,
-                BinaryOperation1 op1
-                BinaryOperation2 op2)
-{
-    while (first1 != last1)
-    {
-         init = op1(std::move(init), op2(*first1, *first2)); // std::move since C++20
-         ++first1;
-         ++first2;
-    }
-*/
-
 core::f32 Network::loss(const vec_t<core::f32> &in, const vec_t<core::f32> &out) {
 	using namespace core::types_literals;
 	if (mLayers.empty() || in.size() != out.size()) [[unlikely]] return 0.0_f32;
