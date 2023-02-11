@@ -18,6 +18,11 @@ const umap<std::string_view, Manager::SaveHandler> Manager::save_handlers{
 	{ Manager::HttpURL,      [](const auto path, const auto &data) { return Manager::save_to_http(path, data); } },
 };
 
+const umap<std::string_view, Manager::SaveHandler> Manager::append_handlers{
+	{ Manager::ResourcesURL, [](const auto path, const auto &data) { return Manager::append_to(Manager::build_path(Manager::assets_root, path, Manager::ResourcesURL), data); } },
+	{ Manager::UserURL,      [](const auto path, const auto &data) { return Manager::append_to(Manager::build_path(Manager::user_root, path, Manager::UserURL), data); } },
+};
+
 
 void Manager::initialize(const std::string_view application_name, const std::string_view assets_directory_name) {
 	spdlog::info("[{}] Initializing with {} and {}",
@@ -60,6 +65,23 @@ bool Manager::save_file(const std::string_view path, const std::vector<byte> &da
 	return false;
 }
 
+bool Manager::append_file(const std::string_view path, const std::vector<byte> &data) {
+	if (path.empty() || data.empty())
+		return false;
+
+	if (const auto url_pos{ path.find(url_separator) }; url_pos != path.npos) {
+		const auto url{ path.substr(0, url_pos + url_separator.size()) };
+		if (const auto &found{ append_handlers.find(url) }; found != std::end(append_handlers)) {
+			found->second(path, data);
+		} else {
+			spdlog::error("[{}]: Unknown URL: '{}' in path '{}'", class_name, url, path);
+		}
+		return false;
+	}
+	spdlog::error("[{}]: Cannot find URL in path '{}'", class_name, path);
+	return false;
+}
+
 std::vector<byte> Manager::load_from(const fs::path &path) {
 	if (!fs::exists(path) || !fs::is_regular_file(path))
 		return {};
@@ -86,7 +108,7 @@ bool Manager::save_to(const fs::path &path, const std::vector<byte> &data) {
 		fs::create_directories(parent_path);
 	}
 
-	if (fs::bofstream file{ path, std::ios::binary | std::ios::ate }; file.is_open()) {
+	if (fs::bofstream file{ path, std::ios::binary | std::ios::trunc }; file.is_open()) {
 		file.write(&data[0], data.size());
 		return true;
 	}
@@ -97,6 +119,23 @@ bool Manager::save_to_http(const fs::path &path, const std::vector<byte> &data) 
 	spdlog::error("[{}]: save_to_http isn't implemented yet", class_name);
 	return false;
 }
+
+bool Manager::append_to(const fs::path &path, const std::vector<byte> &data) {
+	if (!path.has_filename())
+		return false;
+
+	if (const auto parent_path{ path.parent_path() }; !fs::exists(parent_path)) {
+		fs::create_directories(parent_path);
+	}
+
+	if (fs::bofstream file{ path, std::ios::binary | std::ios::app }; file.is_open()) {
+		file.write(&data[0], data.size());
+		return true;
+	}
+
+	return false;
+}
+
 
 fs::path Manager::build_path(const fs::path &prefix, const std::string_view path,
 	const std::string_view prefix_to_replace) {
