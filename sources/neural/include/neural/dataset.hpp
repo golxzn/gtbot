@@ -83,6 +83,9 @@ public:
 	nodis const data_t<value_type> &get_raw_input() const noexcept;
 	nodis const data_t<value_type> &get_raw_output() const noexcept;
 
+	void clean();
+	void clean_split();
+
 #if defined(GOLXZN_DEBUG)
 	[[nodiscard]] std::string to_string() const;
 	[[nodiscard]] std::string dump() const;

@@ -29,6 +29,11 @@ Dataset::Dataset(const std::string_view file) {
 void Dataset::split(const core::f32 ratio) {
 	using namespace core::types_literals;
 
+	mTrainDataInput.clear();
+	mTrainDataOutput.clear();
+	mTestDataInput.clear();
+	mTestDataOutput.clear();
+
 	/// @todo: it could cause out of range crush
 	for (core::u32 id{}; id < mInputData.size(); ++id) {
 		if (core::utils::random::range(0.0_f32, 1.0_f32) < ratio) {
@@ -65,6 +70,7 @@ const Dataset::data_ref_t<Dataset::value_type> &Dataset::get_output(const Type t
 
 Dataset &Dataset::append(const std::initializer_list<value_type> &input, const std::initializer_list<value_type> &output) noexcept {
 	if ((mInputData.empty() && mOutputData.empty()) || validate(input, output)) {
+		clean_split();
 		mInputData.emplace_back(input);
 		mOutputData.emplace_back(output);
 		++mLinesCount;
@@ -74,6 +80,7 @@ Dataset &Dataset::append(const std::initializer_list<value_type> &input, const s
 
 Dataset &Dataset::append(std::initializer_list<value_type> &&input, std::initializer_list<value_type> &&output) noexcept {
 	if ((mInputData.empty() && mOutputData.empty()) || validate(input, output)) {
+		clean_split();
 		mInputData.emplace_back(std::move(input));
 		mOutputData.emplace_back(std::move(output));
 		++mLinesCount;
@@ -84,6 +91,7 @@ Dataset &Dataset::append(std::initializer_list<value_type> &&input, std::initial
 void Dataset::erase(const core::u32 line) {
 	if (line >= mInputData.size()) [[unlikely]] return;
 
+	clean_split();
 	mInputData.erase(mInputData.begin() + line);
 	mOutputData.erase(mOutputData.begin() + line);
 	--mLinesCount;
@@ -125,6 +133,20 @@ const Dataset::data_t<Dataset::value_type> &Dataset::get_raw_input() const noexc
 }
 const Dataset::data_t<Dataset::value_type> &Dataset::get_raw_output() const noexcept {
 	return mOutputData;
+}
+
+void Dataset::clean() {
+	clean_split();
+	mInputData.clear();
+	mOutputData.clear();
+	mLinesCount = 0;
+}
+
+void Dataset::clean_split() {
+	mTrainDataInput.clear();
+	mTrainDataOutput.clear();
+	mTestDataInput.clear();
+	mTestDataOutput.clear();
 }
 
 #if defined(GOLXZN_DEBUG)
