@@ -165,7 +165,7 @@ std::vector<core::f32> Neuron::get_back_propagation_shifts(
 			edge->set_back_propagated(prop_value);
 			return -prop_value * previous->out();
 		}
-		// plog::warn("Neuron::get_back_propagation_shifts - Previous neuron is nullptr");
+		spdlog::warn("[Neuron]: Previous neuron is nullptr");
 		return 0.0_f32;
 	});
 
