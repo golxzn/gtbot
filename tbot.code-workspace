@@ -7,11 +7,11 @@
 		"configurations": [
 			{
 				"name": "(Windows) Launch",
-				"type": "node",
+				"type": "cppvsdbg",
 				"request": "launch",
 				"program": "${command:cmake.launchTargetPath}",
 				"args": [],
-				"cwd": "${workspaceFolder}/bin",
+				"cwd": "${workspaceFolder}/bin"
 			}
 		],
 		"compounds": []

@@ -9,4 +9,8 @@ list(APPEND libraries
 	golxzn::bot
 )
 
-list(APPEND sources ${GTBOT_PLATFORM_SOURCES_DIR}/main.cpp)
+if(GTBOT_CONFIGURE_MODULE MATCHES Platform)
+	add_subdirectory(${GTBOT_PLATFORM_SOURCES_DIR})
+elseif(GTBOT_CONFIGURE_MODULE MATCHES Tests)
+	add_subdirectory(${GTBOT_SOURCES_DIR}/tests)
+endif()

@@ -16,3 +16,7 @@ set_target_properties(golxzn_neural PROPERTIES
 	CXX_STANDARD ${GTBOT_CPP_STANDARD}
 	CXX_STANDARD_REQUIRED ON
 )
+
+unset(local_root)
+unset(headers)
+unset(sources)

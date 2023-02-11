@@ -8,10 +8,16 @@ set(include_directories "")
 set(definitions "")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile_commands.json" FORCE)
+if(NOT DEFINED CMAKE_CONFIGURATION_TYPES)
+	set(CMAKE_CONFIGURATION_TYPES Debug Release)
+endif()
 
 set(GTBOT_RUNTIME_OUTPUT_DIRECTORY ${bin_dir})
 set(GTBOT_LIBRARY_OUTPUT_DIRECTORY ${bin_dir})
 set(GTBOT_ARCHIVE_OUTPUT_DIRECTORY ${bin_dir})
+
+set(GTBOT_CONFIGURE_MODULE Platform CACHE STRING "Module to configure")
+set_property(CACHE GTBOT_CONFIGURE_MODULE PROPERTY STRINGS "Platform;Tests")
 
 set(GTBOT_CPP_STANDARD 20 CACHE STRING "C++ standard")
 set(GTBOT_SOURCES_DIR ${root}/sources CACHE PATH "Sources directory")
@@ -34,6 +40,7 @@ include(cmake/utils/config.cmake)
 
 message(STATUS "-- -- -- -- -- -- -- -- -- options -- -- -- -- -- -- -- -- -- --")
 message(STATUS "Target:                          | ${target}")
+message(STATUS "Configure module:                | ${GTBOT_CONFIGURE_MODULE}")
 message(STATUS "Platform:                        | ${PLATFORM} (${ARCHITECTURE})")
 message(STATUS "Build types:                     | ${CMAKE_CONFIGURATION_TYPES}")
 message(STATUS "C++ standard:                    | ${GTBOT_CPP_STANDARD}")
