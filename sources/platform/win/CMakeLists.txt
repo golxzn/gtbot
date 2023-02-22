@@ -4,7 +4,7 @@ set(local_root ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(${target} ${local_root}/main.cpp)
 
-target_link_libraries(${target} PUBLIC ${libraries})
+target_link_libraries(${target} PUBLIC ${libraries} ${telegram_bot_libraries})
 target_link_directories(${target} PUBLIC ${directories})
 target_include_directories(${target} PUBLIC ${include_directories})
 set_target_properties(${target} PROPERTIES

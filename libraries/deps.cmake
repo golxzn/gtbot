@@ -19,5 +19,8 @@ list(APPEND libraries
 	spdlog::spdlog
 	sago::platform_folders
 	ghc_filesystem
+)
+
+list(APPEND telegram_bot_libraries
 	Td::TdStatic
 )
