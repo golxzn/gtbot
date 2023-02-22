@@ -14,10 +14,10 @@ Dataset::Dataset(const std::vector<core::byte> &raw_data, const core::u32 input_
 }
 
 Dataset::Dataset(const std::string_view file, const core::u32 input_count, const core::u32 output_count)
-	: Dataset{ core::resources::Manager::load_file(file), input_count, output_count } { }
+	: Dataset{ core::resources::manager::load_binary(file), input_count, output_count } { }
 
 Dataset::Dataset(const std::string_view file) {
-	const auto raw_data{ core::resources::Manager::load_file(file) };
+	const auto raw_data{ core::resources::manager::load_binary(file) };
 	if (raw_data.empty()) [[unlikely]] return;
 
 	const auto [offset, input_size, output_size]{ get_input_and_output_count(raw_data) };

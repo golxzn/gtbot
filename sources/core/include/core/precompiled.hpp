@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <numeric>
 #include <fstream>
+#include <sstream>
 #include <cassert>
 #include <codecvt>
 #include <bitset>

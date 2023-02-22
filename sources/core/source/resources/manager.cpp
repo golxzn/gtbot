@@ -3,35 +3,34 @@
 
 namespace golxzn::core::resources {
 
-fs::path Manager::assets_root{ fs::current_path() };
-fs::path Manager::user_root{ fs::path{ sago::getDataHome() } };
+manager::WriteMode manager::write_mode{ manager::WriteMode::Rewrite };
+fs::path manager::assets_root{ fs::current_path() };
+fs::path manager::user_root{ fs::path{ sago::getDataHome() } };
 
-const umap<std::string_view, Manager::LoadHandler> Manager::load_handlers{
-	{ Manager::ResourcesURL, [](const std::string_view path) { return Manager::load_from(Manager::build_path(Manager::assets_root, path, Manager::ResourcesURL)); } },
-	{ Manager::UserURL,      [](const std::string_view path) { return Manager::load_from(Manager::build_path(Manager::user_root, path, Manager::UserURL)); } },
-	{ Manager::HttpURL,      [](const std::string_view path) { return Manager::load_from_http(path); } },
+const umap<std::string_view, manager::LoadHandler> manager::load_handlers{
+	{ manager::ResourcesURL, [](const std::string_view path) { return manager::load_from(manager::build_path(manager::assets_root, path, manager::ResourcesURL)); } },
+	{ manager::UserURL,      [](const std::string_view path) { return manager::load_from(manager::build_path(manager::user_root, path, manager::UserURL)); } },
+	{ manager::HttpURL,      [](const std::string_view path) { return manager::load_from_http(path); } },
 };
 
-const umap<std::string_view, Manager::SaveHandler> Manager::save_handlers{
-	{ Manager::ResourcesURL, [](const auto path, const auto &data) { return Manager::save_to(Manager::build_path(Manager::assets_root, path, Manager::ResourcesURL), data); } },
-	{ Manager::UserURL,      [](const auto path, const auto &data) { return Manager::save_to(Manager::build_path(Manager::user_root, path, Manager::UserURL), data); } },
-	{ Manager::HttpURL,      [](const auto path, const auto &data) { return Manager::save_to_http(path, data); } },
-};
-
-const umap<std::string_view, Manager::SaveHandler> Manager::append_handlers{
-	{ Manager::ResourcesURL, [](const auto path, const auto &data) { return Manager::append_to(Manager::build_path(Manager::assets_root, path, Manager::ResourcesURL), data); } },
-	{ Manager::UserURL,      [](const auto path, const auto &data) { return Manager::append_to(Manager::build_path(Manager::user_root, path, Manager::UserURL), data); } },
+const umap<std::string_view, manager::SaveHandler> manager::save_handlers{
+	{ manager::ResourcesURL, [](auto path, auto data, const auto size) { return manager::save_to(manager::build_path(manager::assets_root, path, manager::ResourcesURL), data, size); } },
+	{ manager::UserURL,      [](auto path, auto data, const auto size) { return manager::save_to(manager::build_path(manager::user_root, path, manager::UserURL), data, size); } },
+	{ manager::HttpURL,      [](auto path, auto data, const auto size) { return manager::save_to_http(path, data, size); } },
 };
 
 
-void Manager::initialize(const std::string_view application_name, const std::string_view assets_directory_name) {
+void manager::initialize(const std::string_view application_name, const std::string_view assets_directory_name) {
 	spdlog::info("[{}] Initializing with {} and {}",
 		class_name, application_name, assets_directory_name);
 	setup_assets_root(assets_directory_name);
 	setup_user_root(application_name);
 }
 
-std::vector<byte> Manager::load_file(const std::string_view path) {
+void manager::set_write_mode(const WriteMode mode) noexcept { write_mode = mode; }
+void manager::reset_write_mode() noexcept { write_mode = WriteMode::Rewrite; }
+
+std::vector<byte> manager::load_binary(const std::string_view path) {
 	if (path.empty())
 		return {};
 
@@ -48,14 +47,20 @@ std::vector<byte> Manager::load_file(const std::string_view path) {
 	return {};
 }
 
-bool Manager::save_file(const std::string_view path, const std::vector<byte> &data) {
+std::string manager::load_string(const std::string_view path) {
+	if (const auto data{ load_binary(path) }; !data.empty())
+		return std::string{ std::begin(data), std::end(data) };
+	return {};
+}
+
+bool manager::save_binary(const std::string_view path, const std::vector<byte> &data) {
 	if (path.empty() || data.empty())
 		return false;
 
 	if (const auto url_pos{ path.find(url_separator) }; url_pos != path.npos) {
 		const auto url{ path.substr(0, url_pos + url_separator.size()) };
 		if (const auto &found{ save_handlers.find(url) }; found != std::end(save_handlers)) {
-			return found->second(path, data);
+			return found->second(path, data.data(), data.size());
 		} else {
 			spdlog::error("[{}]: Unknown URL: '{}' in path '{}'", class_name, url, path);
 		}
@@ -64,15 +69,14 @@ bool Manager::save_file(const std::string_view path, const std::vector<byte> &da
 	spdlog::error("[{}]: Cannot find URL in path '{}'", class_name, path);
 	return false;
 }
-
-bool Manager::append_file(const std::string_view path, const std::vector<byte> &data) {
+bool manager::save_string(const std::string_view path, const std::string_view data) {
 	if (path.empty() || data.empty())
 		return false;
 
 	if (const auto url_pos{ path.find(url_separator) }; url_pos != path.npos) {
 		const auto url{ path.substr(0, url_pos + url_separator.size()) };
-		if (const auto &found{ append_handlers.find(url) }; found != std::end(append_handlers)) {
-			found->second(path, data);
+		if (const auto &found{ save_handlers.find(url) }; found != std::end(save_handlers)) {
+			return found->second(path, reinterpret_cast<const byte *>(data.data()), data.size());
 		} else {
 			spdlog::error("[{}]: Unknown URL: '{}' in path '{}'", class_name, url, path);
 		}
@@ -82,7 +86,7 @@ bool Manager::append_file(const std::string_view path, const std::vector<byte> &
 	return false;
 }
 
-std::vector<byte> Manager::load_from(const fs::path &path) {
+std::vector<byte> manager::load_from(const fs::path &path) {
 	if (!fs::exists(path) || !fs::is_regular_file(path))
 		return {};
 
@@ -95,54 +99,42 @@ std::vector<byte> Manager::load_from(const fs::path &path) {
 	}
 	return {};
 }
-std::vector<byte> Manager::load_from_http(const fs::path &path) {
+std::vector<byte> manager::load_from_http(const fs::path &path) {
 	spdlog::error("[{}]: load_from_http isn't implemented yet", class_name);
 	return {};
 }
 
-bool Manager::save_to(const fs::path &path, const std::vector<byte> &data) {
-	if (!path.has_filename())
+bool manager::save_to(const fs::path &path, const byte *data, const u32 size) {
+	if (!path.has_filename() || size == 0 || data == nullptr)
 		return false;
 
 	if (const auto parent_path{ path.parent_path() }; !fs::exists(parent_path)) {
 		fs::create_directories(parent_path);
 	}
 
-	if (fs::bofstream file{ path, std::ios::binary | std::ios::trunc }; file.is_open()) {
-		file.write(&data[0], data.size());
+	const std::ios::openmode mode{
+		std::ios::binary | (write_mode == WriteMode::Append ? std::ios::app : std::ios::trunc)
+	};
+	if (fs::bofstream file{ path, mode }; file.is_open()) {
+		file.write(data, size);
 		return true;
 	}
 
 	return false;
 }
-bool Manager::save_to_http(const fs::path &path, const std::vector<byte> &data) {
+bool manager::save_to_http(const fs::path &path, const byte *data, const u32 size) {
+	if (!path.has_filename() || size == 0 || data == nullptr)
+		return false;
 	spdlog::error("[{}]: save_to_http isn't implemented yet", class_name);
 	return false;
 }
 
-bool Manager::append_to(const fs::path &path, const std::vector<byte> &data) {
-	if (!path.has_filename())
-		return false;
-
-	if (const auto parent_path{ path.parent_path() }; !fs::exists(parent_path)) {
-		fs::create_directories(parent_path);
-	}
-
-	if (fs::bofstream file{ path, std::ios::binary | std::ios::app }; file.is_open()) {
-		file.write(&data[0], data.size());
-		return true;
-	}
-
-	return false;
-}
-
-
-fs::path Manager::build_path(const fs::path &prefix, const std::string_view path,
+fs::path manager::build_path(const fs::path &prefix, const std::string_view path,
 	const std::string_view prefix_to_replace) {
 	return prefix / fs::path{ path.substr(prefix_to_replace.size()) }.make_preferred();
 }
 
-void Manager::setup_assets_root(const std::string_view assets_name) {
+void manager::setup_assets_root(const std::string_view assets_name) {
 	const fs::path targetDir{ assets_name.empty() ? DefaultAssetsDirectory : assets_name };
 
 	while (!assets_root.empty()) {
@@ -165,7 +157,7 @@ void Manager::setup_assets_root(const std::string_view assets_name) {
 	fs::create_directories(assets_root);
 }
 
-void Manager::setup_user_root(const std::string_view app_name) {
+void manager::setup_user_root(const std::string_view app_name) {
 	user_root /= (app_name.empty() ? DefaultAppName : app_name);
 
 	if (!fs::exists(user_root)) {
