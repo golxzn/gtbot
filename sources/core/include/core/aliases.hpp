@@ -80,3 +80,18 @@ namespace golxzn {
 namespace types_literals = core::types_literals;
 } // namespace golxzn
 
+#define GOLXZN_STATIC_CLASS(classname) \
+	classname() = delete; \
+	classname(const classname &) = delete; \
+	classname(classname &&) = delete; \
+	classname &operator=(const classname &) = delete; \
+	classname &operator=(classname &&) = delete; \
+	~classname() = default
+
+#define GOLXZN_DEFAULT_CLASS(classname) \
+	classname() noexcept = default; \
+	classname(const classname &) = default; \
+	classname(classname &&) = default; \
+	classname &operator=(const classname &) = default; \
+	classname &operator=(classname &&) = default; \
+	~classname() = default
